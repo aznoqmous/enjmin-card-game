@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://c0dyaks6tavls"]
+
+[ext_resource type="Script" uid="uid://c5ealdn4w4243" path="res://scripts/card.gd" id="1_kg30u"]
+[ext_resource type="Texture2D" uid="uid://b6gaafj4cpb3j" path="res://assets/card-bg.png" id="2_sy11y"]
+[ext_resource type="Texture2D" uid="uid://muajh3gpoa8o" path="res://assets/card-banner.png" id="3_6ligt"]
+[ext_resource type="FontFile" uid="uid://b2su602fgtllh" path="res://assets/Kreon-Bold.ttf" id="4_8w5pg"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_nvopj"]
+font = ExtResource("4_8w5pg")
+font_size = 14
+font_color = Color(0.29877168, 0.26676223, 1.540184e-06, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1yd6c"]
+font = ExtResource("4_8w5pg")
+font_size = 26
+
+[node name="Card" type="Control" unique_id=842594571 node_paths=PackedStringArray("cost_label", "def_label", "atk_label", "name_label")]
+custom_minimum_size = Vector2(123, 139.313)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1029.0
+offset_bottom = -508.687
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_kg30u")
+cost_label = NodePath("CostLabel")
+def_label = NodePath("DefLabel")
+atk_label = NodePath("AtkLabel")
+name_label = NodePath("TextureRect2/NameLabel")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=394342933]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_sy11y")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="TextureRect2" type="TextureRect" parent="." unique_id=1698504622]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 55.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_6ligt")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="NameLabel" type="Label" parent="TextureRect2" unique_id=1394564470]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = -54.0
+offset_right = 1.0
+offset_bottom = -54.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "CARD_1_2"
+label_settings = SubResource("LabelSettings_nvopj")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CostLabel" type="Label" parent="." unique_id=85237764]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 92.0
+offset_top = -1.0
+offset_right = -18.0
+offset_bottom = -93.313
+grow_horizontal = 2
+grow_vertical = 2
+text = "1"
+label_settings = SubResource("LabelSettings_1yd6c")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DefLabel" type="Label" parent="." unique_id=748899969]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 95.0
+offset_top = 98.0
+offset_right = -19.0
+offset_bottom = -7.3130035
+grow_horizontal = 2
+grow_vertical = 2
+text = "1"
+label_settings = SubResource("LabelSettings_1yd6c")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AtkLabel" type="Label" parent="." unique_id=765935689]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 98.0
+offset_right = -96.0
+offset_bottom = -7.3130035
+grow_horizontal = 2
+grow_vertical = 2
+text = "1"
+label_settings = SubResource("LabelSettings_1yd6c")
+horizontal_alignment = 1
+vertical_alignment = 1

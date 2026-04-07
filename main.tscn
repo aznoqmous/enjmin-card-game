@@ -1,0 +1,161 @@
+[gd_scene format=3 uid="uid://c3aabaw5rvq17"]
+
+[ext_resource type="Script" uid="uid://dnqswxs4qu874" path="res://scripts/main.gd" id="1_qecti"]
+[ext_resource type="Script" uid="uid://bn052gc6luh8x" path="res://scripts/player.gd" id="2_0xm2m"]
+[ext_resource type="FontFile" uid="uid://b2su602fgtllh" path="res://assets/Kreon-Bold.ttf" id="3_h2yge"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1bvp3"]
+font = ExtResource("3_h2yge")
+font_size = 32
+
+[node name="Main" type="Control" unique_id=23252755 node_paths=PackedStringArray("player_1", "player_2")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qecti")
+player_1 = NodePath("Player1")
+player_2 = NodePath("Player2")
+iterations = 1
+cycles = 1
+load_string = "1_0_2
+1_0_3
+1_1_1
+1_2_1
+2_1_4
+3_4_3
+3_1_6
+4_5_3
+4_0_8
+4_5_4
+4_4_5
+5_6_4
+5_6_5
+5_7_4
+5_1_9
+5_0_10
+6_1_11
+6_1_12
+6_7_6
+6_9_3
+6_5_8
+6_12_1
+6_6_7
+7_13_1
+7_7_8
+7_3_12
+7_1_14
+7_1_13
+7_0_15
+7_0_14"
+
+[node name="Player1" type="Control" parent="." unique_id=1978799652 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -433.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_0xm2m")
+main = NodePath("..")
+hand_control = NodePath("Hand")
+terrain_control = NodePath("Terrain")
+hp_label = NodePath("Label")
+
+[node name="Hand" type="HBoxContainer" parent="Player1" unique_id=1516972638]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 227.0
+offset_top = 60.0
+offset_right = 227.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+alignment = 1
+
+[node name="Terrain" type="HBoxContainer" parent="Player1" unique_id=874664880]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 188.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="Player1" unique_id=1843865359]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -68.5
+offset_top = -94.5
+offset_right = 68.5
+offset_bottom = -52.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "-5/20 HP"
+label_settings = SubResource("LabelSettings_1bvp3")
+
+[node name="Player2" type="Control" parent="." unique_id=654535049 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_0xm2m")
+main = NodePath("..")
+hand_control = NodePath("Hand")
+terrain_control = NodePath("Terrain")
+hp_label = NodePath("Label2")
+
+[node name="Hand" type="HBoxContainer" parent="Player2" unique_id=78781954]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 249.0
+offset_top = 505.00003
+offset_right = 249.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+alignment = 1
+
+[node name="Terrain" type="HBoxContainer" parent="Player2" unique_id=773539969]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 330.0
+offset_bottom = -179.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label2" type="Label" parent="Player2" unique_id=1184313130]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -65.5
+offset_top = 268.5
+offset_right = 65.5
+offset_bottom = 310.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "3/20 HP"
+label_settings = SubResource("LabelSettings_1bvp3")
