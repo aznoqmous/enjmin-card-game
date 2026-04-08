@@ -3,6 +3,7 @@ extends Node
 class_name Player
 
 var cards : Array[CardResource]
+var deck_cards: Array[Card]
 var deck : Array[Card]
 var hand : Array[Card]
 var discard_pile : Array[Card]
@@ -23,22 +24,33 @@ var card_controls : Dictionary[String, CardControl]
 @export var hand_control: HBoxContainer
 @export var terrain_control: HBoxContainer
 @export var hp_label: Label
+@export var mana_label: Label
+@export var portrait: TextureRect
 const CARD = preload("res://scenes/card.tscn")
+
+func _ready():
+	for c in hand_control.get_children():
+		c.queue_free()
+	for c in terrain_control.get_children():
+		c.queue_free()
 
 func clear_visuals():
 	for cc in card_controls.values():
 		cc.queue_free()
 	card_controls.clear()
-
-func start_game():
-	deck.clear()
-	hand.clear()
-	terrain.clear()
-	discard_pile.clear()
+	
+func update_deck_cards():
+	deck_cards.clear()
 	for cr in cards:
 		var nc = Card.new()
 		nc.load_resource(cr)
-		deck.append(nc)
+		deck_cards.append(nc)
+		
+func start_game():
+	deck = deck_cards.duplicate()
+	hand.clear()
+	terrain.clear()
+	discard_pile.clear()
 	deck.shuffle()
 	
 	max_mana = starting_mana
@@ -47,13 +59,18 @@ func start_game():
 	
 func start_turn():
 	current_mana = max_mana
-	await draw(1)
 	for card in terrain: 
 		card.can_attack = true
+		if main.visualize:
+			card_controls[card.name].update_state(card)
+	if main.visualize:
+		mana_label.text = str(current_mana, "/", max_mana)
 
 func draw(count):
 	for i in count:
-		if deck.size() <= 0: break
+		if deck.size() <= 0:
+			take_damage(1)
+			break
 		if main.visualize:
 			var ncc = CARD.instantiate() as CardControl
 			ncc.load_card(deck[0])
@@ -64,26 +81,51 @@ func draw(count):
 			
 		hand.append(deck[0])
 		deck.erase(deck[0])
-			
+	sort_hand()
 
 func end_turn():
 	max_mana += mana_increment_per_turn
+	await draw(1)
 
 func show_deck():
 	cards.sort_custom(func(a, b): return a.atk < b.atk)
 	cards.sort_custom(func(a, b): return a.cost < b.cost)
-	var str = ""
+	var total = 0
+	var str = "COST"
 	for c in cards:
-		str = str(str, " ", c.cost)
-	print(str)
-	str = ""
+		str = str(str, " %2d" % c.cost)
+		total += c.cost
+	print(str, " | %3d" % total)
+	total = 0
+	str = "ATK "
 	for c in cards:
-		str = str(str, " ", c.atk)
-	print(str)
-	str = ""
+		str = str(str, " %2d" % c.atk)
+		total += c.atk
+	print(str, " | %3d" % total)
+	total = 0
+	str = "DEF "
 	for c in cards:
-		str = str(str, " ", c.def)
-	print(str)
+		str = str(str, " %2d" % c.def)
+		total += c.def
+	print(str, " | %3d" % total)
+	total = 0
+	str = "GURD"
+	for c in cards:
+		str = str(str, " %2d" % (1 if c.has_guard else 0))
+		total += (1 if c.has_guard else 0)
+	print(str, " | %3d" % total)
+	total = 0
+	str = "FLY "
+	for c in cards:
+		str = str(str, " %2d" % (1 if c.has_flying else 0))
+		total += (1 if c.has_flying else 0)
+	print(str, " | %3d" % total)
+	total = 0
+	str = "CHRG"
+	for c in cards:
+		str = str(str, " %2d" % (1 if c.has_charge else 0))
+		total += (1 if c.has_charge else 0)
+	print(str, " | %3d" % total)
 		
 func show_card_costs():
 	print("Card cost repartition")
@@ -91,8 +133,10 @@ func show_card_costs():
 	var cost_str = ""
 	var cost_count = {}
 	
+	for i in 8:
+		cost_count[i] = 0
+		
 	for c in cards:
-		if not cost_count.has(c.cost): cost_count[c.cost] = 0
 		cost_count[c.cost] += 1
 		
 	for k in cost_count.keys():
@@ -102,21 +146,23 @@ func show_card_costs():
 		print(k, " x ", cost_count[k], " ", cost_str)
 
 func save_deck():
-	print("SAVED DECK")
 	var save = []
 	for c in cards:
-		save.append(str(c.cost, "_", c.atk, "_", c.def))
+		save.append(c.get_id())
 	return "\n".join(save)
 	
 func get_playable_cards():
 	return hand.filter(func(c): return c.cost <= current_mana)
 	
 func play_costest_card():
-	var playable_cards = get_playable_cards()
-	if not playable_cards.size(): return false
-	playable_cards.sort_custom(func(a, b): return a.cost > b.cost)
-	play_card(playable_cards[0])
-	return true
+	for card in hand:
+		if card.cost <= current_mana:
+			play_card(card)
+			return true;
+	return false
+
+func sort_hand():
+	hand.sort_custom(func(a, b): return a.cost > b.cost)
 	
 func play_card(card: Card):
 	hand.erase(card)
@@ -124,6 +170,8 @@ func play_card(card: Card):
 	current_mana -= card.cost
 	if main.visualize:
 		card_controls[card.name].reparent(terrain_control)
+		card_controls[card.name].update_state(card)
+		mana_label.text = str(current_mana, "/", max_mana)
 
 func take_damage(value):
 	current_hp -= value
@@ -133,14 +181,26 @@ func take_damage(value):
 func is_alive():
 	return current_hp > 0
 
+func update_hand_playability():
+	for card in hand:
+		var cc = card_controls[card.name]
+		cc.update_playable(card, self)
+
 class Card:
 	var atk := 0
 	var def := 0
 	var cost := 0
+	var has_guard := false
+	var has_flying := false
+	var has_charge := false
 	var can_attack := false
 	var name: String
+	
 	func load_resource(cr: CardResource):
 		atk = cr.atk
 		def = cr.def
 		cost = cr.cost
-		name = cr.resource_name
+		has_guard = cr.has_guard
+		has_flying = cr.has_flying
+		has_charge = cr.has_charge
+		name = cr.get_id()

@@ -16,146 +16,187 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_qecti")
-player_1 = NodePath("Player1")
-player_2 = NodePath("Player2")
-iterations = 1
-cycles = 1
-load_string = "1_0_2
-1_0_3
-1_1_1
-1_2_1
+player_1 = NodePath("VBoxContainer/Player1")
+player_2 = NodePath("VBoxContainer/Player2")
+iterations = 1000
+cycles = 500
+load_string = "1_1_1
+2_1_3
 2_1_4
+2_3_2
+3_3_3
+3_3_4
+3_5_2
+3_6_1
+3_4_2
 3_4_3
-3_1_6
-4_5_3
-4_0_8
+3_5_1
+4_6_3
+4_8_1
+4_6_2
 4_5_4
-4_4_5
 5_6_4
-5_6_5
-5_7_4
-5_1_9
-5_0_10
-6_1_11
+5_7_3
+5_9_2
+5_10_1
+6_6_6
+6_3_9
 6_1_12
-6_7_6
-6_9_3
-6_5_8
-6_12_1
-6_6_7
-7_13_1
-7_7_8
-7_3_12
-7_1_14
-7_1_13
-7_0_15
-7_0_14"
+6_0_13
+7_6_9
+7_4_11
+7_3_11
+7_2_13
+7_10_4
+7_11_4
+7_14_1"
+visualize = false
 
-[node name="Player1" type="Control" parent="." unique_id=1978799652 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label")]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=859937203]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -433.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_0xm2m")
-main = NodePath("..")
-hand_control = NodePath("Hand")
-terrain_control = NodePath("Terrain")
-hp_label = NodePath("Label")
-
-[node name="Hand" type="HBoxContainer" parent="Player1" unique_id=1516972638]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 227.0
-offset_top = 60.0
-offset_right = 227.0
-offset_bottom = -15.0
-grow_horizontal = 2
-grow_vertical = 2
-scale = Vector2(0.6, 0.6)
-alignment = 1
-
-[node name="Terrain" type="HBoxContainer" parent="Player1" unique_id=874664880]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 188.0
-offset_bottom = 112.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="Player1" unique_id=1843865359]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -68.5
-offset_top = -94.5
-offset_right = 68.5
-offset_bottom = -52.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "-5/20 HP"
-label_settings = SubResource("LabelSettings_1bvp3")
-
-[node name="Player2" type="Control" parent="." unique_id=654535049 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Player2" type="Control" parent="VBoxContainer" unique_id=654535049 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label", "mana_label", "portrait")]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
 script = ExtResource("2_0xm2m")
-main = NodePath("..")
+main = NodePath("../..")
 hand_control = NodePath("Hand")
 terrain_control = NodePath("Terrain")
-hp_label = NodePath("Label2")
+hp_label = NodePath("HealthLabel")
+mana_label = NodePath("ManaLabel")
+portrait = NodePath("Portrait")
 
-[node name="Hand" type="HBoxContainer" parent="Player2" unique_id=78781954]
+[node name="Hand" type="HBoxContainer" parent="VBoxContainer/Player2" unique_id=78781954]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 249.0
-offset_top = 505.00003
+offset_top = 27.0
 offset_right = 249.0
-offset_bottom = -4.0
+offset_bottom = -154.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.6, 0.6)
 alignment = 1
 
-[node name="Terrain" type="HBoxContainer" parent="Player2" unique_id=773539969]
+[node name="Terrain" type="HBoxContainer" parent="VBoxContainer/Player2" unique_id=773539969]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 330.0
-offset_bottom = -179.0
+offset_top = 170.0
+offset_bottom = -11.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="Label2" type="Label" parent="Player2" unique_id=1184313130]
+[node name="HealthLabel" type="Label" parent="VBoxContainer/Player2" unique_id=1184313130]
+layout_mode = 1
+offset_right = 131.0
+offset_bottom = 42.0
+text = "18/20 HP"
+label_settings = SubResource("LabelSettings_1bvp3")
+
+[node name="ManaLabel" type="Label" parent="VBoxContainer/Player2" unique_id=1616167420]
+layout_mode = 1
+offset_top = 37.0
+offset_right = 142.0
+offset_bottom = 79.0
+text = "1/8"
+label_settings = SubResource("LabelSettings_1bvp3")
+
+[node name="Portrait" type="TextureRect" parent="VBoxContainer/Player2" unique_id=1442237093]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -65.5
-offset_top = 268.5
-offset_right = 65.5
-offset_bottom = 310.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "3/20 HP"
+
+[node name="Player1" type="Control" parent="VBoxContainer" unique_id=81406070 node_paths=PackedStringArray("main", "hand_control", "terrain_control", "hp_label", "mana_label", "portrait")]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+script = ExtResource("2_0xm2m")
+main = NodePath("../..")
+hand_control = NodePath("Hand")
+terrain_control = NodePath("Terrain")
+hp_label = NodePath("HealthLabel")
+mana_label = NodePath("ManaLabel")
+portrait = NodePath("Portrait")
+
+[node name="Hand" type="HBoxContainer" parent="VBoxContainer/Player1" unique_id=1516972638]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -333.0
+offset_top = -93.0
+offset_right = 806.0
+offset_bottom = 46.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.6, 0.6)
+alignment = 1
+
+[node name="Terrain" type="HBoxContainer" parent="VBoxContainer/Player1" unique_id=874664880]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 53.0
+offset_bottom = -125.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="HealthLabel" type="Label" parent="VBoxContainer/Player1" unique_id=1843865359]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -77.0
+offset_right = 137.0
+offset_bottom = -35.0
+grow_vertical = 0
+text = "-12/20 HP"
 label_settings = SubResource("LabelSettings_1bvp3")
+
+[node name="ManaLabel" type="Label" parent="VBoxContainer/Player1" unique_id=1536386977]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -42.0
+offset_right = 142.0
+grow_vertical = 0
+text = "1/8"
+label_settings = SubResource("LabelSettings_1bvp3")
+
+[node name="Portrait" type="TextureRect" parent="VBoxContainer/Player1" unique_id=741722438]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
