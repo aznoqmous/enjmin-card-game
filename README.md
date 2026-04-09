@@ -1,5 +1,14 @@
 # enjmin card game
 
+## Rendu
+- GIT
+- Rapport
+
+### Rapport
+- Description du protocole
+- Résultats step by step / analytics - nombre de tour - distribution - durée de partie
+- Analyse critique
+
 ## Rules
 **Player**
 - HP 20
@@ -27,7 +36,7 @@
 
 ## Steps:
 - Basic learning : 1000 * 500 fight with substition, no skills
-- Reinforcement learning : fight against same deck after reaching 90% WR
+- Reinforced training : fight against same deck after reaching 90% WR
 - Rated Setlist : Rate cards according to their impact in WR, priorize high rated cards when adding card to the deck 
 - Setlist flag : Remove bad cards from base set list
 - Genetic : Mutation + Crossover + Mutations
@@ -39,7 +48,7 @@ First 1000 iterations :
 After 2000 iterations :
 ![](assets/screenshot-2.png)
 
-## Reinforcement Learning
+## Reinforced training
 Opponent deck copy player deck when winrate is over 95%, for 2000 iterations.
 We observe a lot more changes happening during the simulation, and low cost cards are less present in the deck  
 
