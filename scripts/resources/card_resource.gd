@@ -5,8 +5,8 @@ var cost : int :
 	get():
 		return floor(
 			float(atk + def) / 2.0 
-			+ (1.5 if has_guard else 0.0)
-			+ (1.5 if has_flying else 0.0)
+			+ (2.0 if has_guard else 0.0)
+			+ (1.0 if has_flying else 0.0)
 			+ (2.0 if has_charge else 0.0)
 		)
 

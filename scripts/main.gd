@@ -5,7 +5,7 @@ class_name Main
 @export var player_1: Player
 @export var player_2: Player
 var cards: Array[CardResource]
-var deck_size := 30
+var deck_size := 40
 
 @export_tool_button("GENERATE CARDS") var generate = generate_cards
 @export_tool_button("CREATE DECKS") var create = create_decks
@@ -13,11 +13,16 @@ var deck_size := 30
 @export_category("SIMULATION")
 @export var iterations := 100
 @export var cycles := 100
+@export var reinforced_training := false
+@export var do_clear_cards_efficiency := false
+@export var reinforced_training_threshold := 0.9
 #@export_tool_button("PLAY GAME") var play = play_game
 @export_tool_button("PLAY GAMES") var plays = simulation
+@export_tool_button("COPY PLAYER 1 DECK TO PLAYER 2") var copy_deck = copy_player_deck
+@export_tool_button("PLAYER 1 CREATE OPTIMIZED DECK") var create_optimized = create_optimized_deck
+
 
 @export_category("SAVE/LOAD")
-@export_tool_button("COPY PLAYER 1 DECK TO PLAYER 2") var copy_deck = copy_player_deck
 @export_tool_button("SAVE DECK") var save = save_deck
 @export_tool_button("LOAD PLAYER 1 DECK") var load_1 = load_player_1_deck
 @export_tool_button("LOAD PLAYER 2 DECK") var load_2 = load_player_2_deck
@@ -27,6 +32,7 @@ var deck_size := 30
 @export var visualize := true
 @export var visualizer_speed := 0.5
 
+var cards_efficiency = {}
 
 func _ready():
 	generate_cards()
@@ -53,8 +59,11 @@ func generate_cards():
 				card.resource_name = card.get_id()
 				cards.append(card)
 				print(card)
-
-	print(cards.size())
+				
+	clear_cards_efficiency()
+	
+	print("Card pool : ", cards.size())
+	
 
 func create_deck() -> Array[CardResource]:
 	var deck : Array[CardResource]
@@ -90,6 +99,15 @@ func play_game(first_player: Player) -> Player:
 		
 	return current_turn
 
+func card_attack_animation(cc: CardControl, pos):
+	var previous_position = cc.global_position
+	cc.z_index = 10
+	get_tree().create_tween().tween_property(cc, "global_position", pos, 0.3 * visualizer_speed)
+	await get_tree().create_timer(0.3 * visualizer_speed).timeout
+	get_tree().create_tween().tween_property(cc, "global_position", previous_position, 0.5 * visualizer_speed)
+	await get_tree().create_timer(0.5 * visualizer_speed).timeout
+	cc.z_index = 0
+
 var turn_index := 0
 func play_turn(player: Player):
 	turn_index += 1
@@ -103,30 +121,27 @@ func play_turn(player: Player):
 		await wait()
 		if visualize: player.update_hand_playability()
 			
-			
 	for card in player.terrain:
 		if card.can_attack or card.has_charge:
-			if visualize:
-				var cc = player.card_controls[card.name]
-				var previous_position = cc.global_position
-				cc.z_index = 10
-				get_tree().create_tween().tween_property(cc, "global_position", opponent.portrait.global_position, 0.3 * visualizer_speed)
-				await get_tree().create_timer(0.3 * visualizer_speed).timeout
-				get_tree().create_tween().tween_property(cc, "global_position", previous_position, 0.5 * visualizer_speed)
-				await get_tree().create_timer(0.5 * visualizer_speed).timeout
-				cc.z_index = 0
-				
 			var guarded = false
 			for ocard in opponent.terrain:
-				if ocard.has_guard:
+				if ocard.has_guard and ocard.def > 0:
 					if card.has_flying and not ocard.has_flying: continue
 					resolve_card_combat(card, ocard)
 					if visualize:
+						await card_attack_animation(player.card_controls[card.name], opponent.card_controls[ocard.name].global_position)
 						opponent.card_controls[ocard.name].load_card(ocard)
 						player.card_controls[card.name].load_card(card)
+						player.card_controls[card.name].def_label.modulate = Color.RED
+						opponent.card_controls[ocard.name].def_label.modulate = Color.RED
 					guarded = true
 					break
-			if guarded: break
+					
+			if guarded: continue
+			
+			if visualize:
+				var cc = player.card_controls[card.name]
+				await card_attack_animation(cc, opponent.portrait.global_position)
 			opponent.take_damage(card.atk)
 			
 	for card in player.terrain:
@@ -135,13 +150,21 @@ func play_turn(player: Player):
 			player.terrain.erase(card)
 			if visualize:
 				player.card_controls[card.name].queue_free()
-			
+		card.def = card.max_def
+		if visualize:
+			player.card_controls[card.name].def_label.text = str(card.def)
+			player.card_controls[card.name].def_label.modulate = Color.WHITE
+
 	for card in opponent.terrain:
 		if card.def <= 0:
 			opponent.discard_pile.append(card)
 			opponent.terrain.erase(card)
 			if visualize:
 				opponent.card_controls[card.name].queue_free()
+		card.def = card.max_def
+		if visualize:
+			opponent.card_controls[card.name].def_label.text = str(card.def)
+			opponent.card_controls[card.name].def_label.modulate = Color.WHITE
 	
 	await player.end_turn()
 
@@ -152,80 +175,155 @@ func resolve_card_combat(attacker: Player.Card, defender: Player.Card):
 func simulation():
 	var start = Time.get_ticks_msec()
 	var last_deck = player_1.cards.duplicate()
+	var best_win_ratio = 0.0
 	var last_win_ratio = 0.0
 	#player_2.cards = create_deck()
 	player_1.update_deck_cards()
 	player_2.update_deck_cards()
+	
+	if visualize:
+		await play_games(1)
+		return;
 	
 	pressClearButton()
 	print("STARTING DECK")
 	player_1.show_deck()
 	player_1.show_card_costs()
 	
+	var added_card : CardResource
+	var removed_card : CardResource
 	
-	if visualize:
-		await play_games(1)
-		return;
+	if do_clear_cards_efficiency:
+		clear_cards_efficiency()
+		
+	var max_average_turn_for_win = 100000
+	var max_quickest_win = 100000
+	
 	var changes := 0
 	for i in iterations:
 		var win_ratio = await play_games(cycles)
 		await get_tree().create_timer(0).timeout
+		if max_average_turn_for_win > average_turn_for_win: max_average_turn_for_win = average_turn_for_win
+		if max_quickest_win > quickest_win: max_quickest_win = quickest_win
+		
 		#print(floor(i / float(iterations) * 100.0), "%")
 		#player_1.show_card_costs()
-		#print("Current win/best : ", win_ratio, "/", last_win_ratio)
+		#print("Current win/best : ", win_ratio, "/", best_win_ratio)
 
-		if win_ratio < last_win_ratio:
+		if win_ratio < best_win_ratio:
+			# regression
 			player_1.cards = last_deck.duplicate()
+			if added_card:
+				cards_efficiency[added_card.get_id()].value -= best_win_ratio - win_ratio
+				cards_efficiency[removed_card.get_id()].value += best_win_ratio - win_ratio
+				
+
 		else:
-			if last_win_ratio: changes += 1
+			# progression
+			if best_win_ratio: changes += 1
 			last_deck = player_1.cards.duplicate()
-			last_win_ratio = win_ratio
-			print("Best win ratio : ", last_win_ratio, " - ", i)
+			best_win_ratio = win_ratio
+			print("Best win ratio : ", best_win_ratio, " - ", i)
+			if added_card:
+				cards_efficiency[added_card.get_id()].value += best_win_ratio - win_ratio
+				cards_efficiency[removed_card.get_id()].value -= best_win_ratio - win_ratio
 		
-		if win_ratio >= 0.925:
-			last_win_ratio = 0.0
+		if reinforced_training and win_ratio >= reinforced_training_threshold:
+			best_win_ratio = 0.0
 			player_2.cards = player_1.cards.duplicate()
 			player_2.update_deck_cards()
+			if do_clear_cards_efficiency:
+				clear_cards_efficiency()
 		else:
-			player_1.cards.erase(player_1.cards.pick_random())
-			player_1.cards.append(add_random_card(player_1))
+			removed_card = remove_worst_card(player_1)
+			player_1.cards.erase(removed_card)
+			added_card = add_random_best_card(player_1)
+			player_1.cards.append(added_card)
 			player_1.update_deck_cards()
-		var pstr = "["
-		for p in 100.0:
-			pstr = str(pstr, "#" if p / 100.0 < i / float(iterations) else " ")
-		pstr = str(pstr, "] - ", win_ratio)
-		print(pstr)
+		
+		if not i % 10:
+			var pstr = "["
+			for p in 100.0:
+				pstr = str(pstr, "#" if p / 100.0 < i / float(iterations) else " ")
+			pstr = str(pstr, "] - ", win_ratio, " - ", best_win_ratio, " - ", max_average_turn_for_win, " - ", max_quickest_win)
+			print(pstr)
 		if win_ratio == 1: break;
+		
+		last_win_ratio = win_ratio
+
 		
 	print("-----------------------------")
 	print("Time spent :", floor((Time.get_ticks_msec() - start) / 100.0) / 10.0, "s")
 	print("Number of changes : ", changes)
 	print("-----------------------------")
 	player_1.cards = last_deck.duplicate()
-	print("Best deck so far : ", last_win_ratio * 100.0, "% winrate")
+	print("Best deck so far : ", best_win_ratio * 100.0, "% winrate")
 	player_1.show_deck()
 	player_1.show_card_costs()
+	print("Average turn for win ", max_average_turn_for_win)
+	print("Quickest win ", max_quickest_win)
+	#print("Cards efficiency:")
+	#var ce_total = 0
+	#var ce = cards_efficiency.values()
+	#ce.sort_custom(func(a, b): return a.value > b.value)
+	#for c in ce:
+		#if c.value == 0.0: continue
+		#ce_total += 1
+		#print(c.card.get_id(), " ", c.value)
+	#print(ce_total, "/", cards.size(), " cards tested")
+	
 	#print("Opponent deck : ")
 	#player_2.show_deck()
 	#player_2.show_card_costs()
+
+func clear_cards_efficiency():
+	cards_efficiency.clear()
+	for card in cards:
+		cards_efficiency[card.get_id()] = {"card": card, "value": 0}
+
+func add_random_best_card(player: Player) -> CardResource:
+	var player_res = player.cards.map(func(c: CardResource): return c.get_id())
+	var ce = cards_efficiency.values().filter(func(c): return not player_res.has(c.card.get_id()))
+	ce.shuffle()
+	
+	# force unrated card
+	for c in ce:
+		if c.value == 0.0: return c.card
 		
+	ce.sort_custom(func(a, b): return a.value > b.value)
+	return ce[0].card
+	
+func remove_worst_card(player: Player) -> CardResource:
+	#return player.cards.pick_random()
+	var player_res = player.cards.map(func(c: CardResource): return c.get_id())
+	var ce = cards_efficiency.values().filter(func(c): return player_res.has(c.card.get_id()))
+	
+	# force unrated card
+	for c in ce:
+		if c.value == 0.0: return c.card
+		
+	ce.sort_custom(func(a, b): return a.value < b.value)
+	return ce[0].card
+	
 func add_random_card(player: Player):
 	var player_res = player.cards.map(func(c: CardResource): return c.get_id())
 	var available_cards = cards.filter(func(c: CardResource): return not player_res.has(c.get_id()))
 	return available_cards.pick_random()
-	
+
+var quickest_win := 100
+var average_turn_for_win := 0.0
 func play_games(total_games: int) -> float:
 	var start = Time.get_ticks_msec()
 	var player_1_win := 0
 	var turn_win := 0
-	var quickest_win := 100
+	quickest_win = 100
 	for i in total_games:
 		var winner = await play_game(player_1 if i < float(total_games) / 2.0 else player_2)
 		if winner == player_1:
 			player_1_win += 1
 			turn_win += turn_index
 			if turn_index < quickest_win: quickest_win = turn_index
-		
+	average_turn_for_win = float(turn_win) / float(player_1_win)
 	#print("Avg turns for win : ", float(turn_win) / float(player_1_win), " - ", turn_win, "/", player_1_win)
 	#print("Quickest win : ", quickest_win, " turns")
 	#print("Total time : ", Time.get_ticks_msec() - start, "ms")
@@ -265,9 +363,15 @@ func save_deck():
 		
 func load_player_1_deck():
 	player_1.cards = load_deck(load_string)
+	print("Loaded player_1 deck !")
+	player_1.show_deck()
+	player_1.show_card_costs()
 	
 func load_player_2_deck():
 	player_2.cards = load_deck(load_string)
+	print("Loaded player_2 deck !")
+	player_2.show_deck()
+	player_2.show_card_costs()
 
 func load_deck(deck_string) -> Array[CardResource]:
 	var res_cards : Array[CardResource]
@@ -275,12 +379,39 @@ func load_deck(deck_string) -> Array[CardResource]:
 		var card_spec = line.split("_")
 		var cr = CardResource.new()
 		if card_spec.size() < 3: continue;
-		cr.cost = int(card_spec[0])
+		#cr.cost = int(card_spec[0])
 		cr.atk = int(card_spec[1])
 		cr.def = int(card_spec[2])
+		cr.has_guard = card_spec[3] == "1"
+		cr.has_flying = card_spec[4] == "1"
+		cr.has_charge = card_spec[5] == "1"
+		if cr.cost > 7:
+			print("UNVALID DECK - UNVALID CARD COST : ", cr.cost)
+			return res_cards
 		res_cards.append(cr)
+	
+	if res_cards.size() != deck_size:
+		print("UNVALID DECK - DECK DOESNT CONTAINS ", deck_size, " CARDS (", res_cards.size(), ")")
+		return res_cards
+	
+	var cardz = {}
+	for card in res_cards:
+		cardz[card] = 1
+	if cardz.size() != res_cards.size():
+		print("UNVALID DECK - CARDS ARE NOT UNIQUE")
+		return res_cards
+	
+	print("--- VALID DECK LOADED ---")
 	return res_cards
 
 func wait(v:=1.0):
 	if not visualize: return;
 	await get_tree().create_timer(visualizer_speed * v).timeout
+
+func create_optimized_deck():
+	player_1.cards.clear()
+	var ce = cards_efficiency.values()
+	ce.sort_custom(func(a, b): return a.value > b.value)
+	for i in deck_size:
+		player_1.cards.append(ce[i].card)
+	player_1.update_deck_cards()

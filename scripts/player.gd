@@ -9,12 +9,12 @@ var hand : Array[Card]
 var discard_pile : Array[Card]
 var terrain : Array[Card]
 
-var starting_mana := 3
-var max_mana := 3
+var starting_mana := 4
+var max_mana := 4
 var current_mana := 0
 var mana_increment_per_turn := 1
-var max_hp := 20
-var current_hp := 20
+var max_hp := 30
+var current_hp := 30
 var card_draw := 7
 
 var card_controls : Dictionary[String, CardControl]
@@ -25,6 +25,7 @@ var card_controls : Dictionary[String, CardControl]
 @export var terrain_control: HBoxContainer
 @export var hp_label: Label
 @export var mana_label: Label
+@export var deck_label: Label
 @export var portrait: TextureRect
 const CARD = preload("res://scenes/card.tscn")
 
@@ -35,9 +36,10 @@ func _ready():
 		c.queue_free()
 
 func clear_visuals():
-	for cc in card_controls.values():
-		cc.queue_free()
+	for c in card_controls.values():
+		if c: c.queue_free()
 	card_controls.clear()
+	await get_tree().process_frame
 	
 func update_deck_cards():
 	deck_cards.clear()
@@ -75,8 +77,9 @@ func draw(count):
 			var ncc = CARD.instantiate() as CardControl
 			ncc.load_card(deck[0])
 			hand_control.add_child(ncc)
-			ncc.owner = EditorInterface.get_edited_scene_root()
+			#ncc.owner = EditorInterface.get_edited_scene_root()
 			card_controls[deck[0].name] = ncc
+			deck_label.text = str(deck.size(), "/", cards.size())
 			await main.wait(0.1)
 			
 		hand.append(deck[0])
@@ -189,6 +192,7 @@ func update_hand_playability():
 class Card:
 	var atk := 0
 	var def := 0
+	var max_def := 0
 	var cost := 0
 	var has_guard := false
 	var has_flying := false
@@ -199,6 +203,7 @@ class Card:
 	func load_resource(cr: CardResource):
 		atk = cr.atk
 		def = cr.def
+		max_def = cr.def
 		cost = cr.cost
 		has_guard = cr.has_guard
 		has_flying = cr.has_flying
