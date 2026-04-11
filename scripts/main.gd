@@ -4,8 +4,12 @@ class_name Main
 
 @export var player_1: Player
 @export var player_2: Player
+
+var player_1_starting_deck: Array[CardResource]
+var player_2_starting_deck: Array[CardResource]
+
 var cards: Array[CardResource]
-var deck_size := 40
+var deck_size := 30
 
 @export_tool_button("GENERATE CARDS") var generate = generate_cards
 @export_tool_button("CREATE DECKS") var create = create_decks
@@ -13,19 +17,25 @@ var deck_size := 40
 @export_category("SIMULATION")
 @export var iterations := 100
 @export var cycles := 100
+@export_group("REINFORCED")
 @export var reinforced_training := false
-@export var do_clear_cards_efficiency := false
 @export var reinforced_training_threshold := 0.9
+@export_group("EFFICIENCY")
+@export var has_efficiency := false
+@export var do_clear_cards_efficiency := false
+
 #@export_tool_button("PLAY GAME") var play = play_game
 @export_tool_button("PLAY GAMES") var plays = simulation
 @export_tool_button("COPY PLAYER 1 DECK TO PLAYER 2") var copy_deck = copy_player_deck
 @export_tool_button("PLAYER 1 CREATE OPTIMIZED DECK") var create_optimized = create_optimized_deck
 
-
 @export_category("SAVE/LOAD")
 @export_tool_button("SAVE DECK") var save = save_deck
 @export_tool_button("LOAD PLAYER 1 DECK") var load_1 = load_player_1_deck
 @export_tool_button("LOAD PLAYER 2 DECK") var load_2 = load_player_2_deck
+@export_tool_button("LOAD STARTING DECKS") var load_starting = load_starting_decks
+@export_tool_button("PRINT PLAYER 1 DECK") var print_player_1 = print_player_1_deck
+@export_tool_button("PRINT PLAYER 2 DECK") var print_player_2 = print_player_2_deck
 @export_multiline var load_string : String
 
 @export_category("VISUALIZER")
@@ -80,6 +90,9 @@ func create_decks():
 	
 	player_1.show_deck()
 	player_1.show_card_costs()
+	
+	player_1_starting_deck = player_1.cards.duplicate()
+	player_2_starting_deck = player_2.cards.duplicate()
 
 var current_turn : Player
 var opponent : Player
@@ -181,6 +194,8 @@ func simulation():
 	player_1.update_deck_cards()
 	player_2.update_deck_cards()
 	
+	var stats = []
+	
 	if visualize:
 		await play_games(1)
 		return;
@@ -213,13 +228,18 @@ func simulation():
 		if win_ratio < best_win_ratio:
 			# regression
 			player_1.cards = last_deck.duplicate()
-			if added_card:
+			if added_card and has_efficiency:
 				cards_efficiency[added_card.get_id()].value -= best_win_ratio - win_ratio
 				cards_efficiency[removed_card.get_id()].value += best_win_ratio - win_ratio
-				
 
 		else:
 			# progression
+			stats.append({
+				"step": i,
+				"win_ratio": win_ratio,
+				"average_turn_for_win": average_turn_for_win,
+				"card_costs": player_1.get_card_costs()
+			})
 			if best_win_ratio: changes += 1
 			last_deck = player_1.cards.duplicate()
 			best_win_ratio = win_ratio
@@ -235,11 +255,18 @@ func simulation():
 			if do_clear_cards_efficiency:
 				clear_cards_efficiency()
 		else:
-			removed_card = remove_worst_card(player_1)
-			player_1.cards.erase(removed_card)
-			added_card = add_random_best_card(player_1)
-			player_1.cards.append(added_card)
-			player_1.update_deck_cards()
+			if has_efficiency:
+				removed_card = remove_worst_card(player_1)
+				player_1.cards.erase(removed_card)
+				added_card = add_random_best_card(player_1)
+				player_1.cards.append(added_card)
+				player_1.update_deck_cards()
+			else:
+				removed_card = player_1.cards.pick_random()
+				player_1.cards.erase(removed_card)
+				added_card = add_random_card(player_1)
+				player_1.cards.append(added_card)
+				player_1.update_deck_cards()
 		
 		if not i % 10:
 			var pstr = "["
@@ -251,8 +278,11 @@ func simulation():
 		
 		last_win_ratio = win_ratio
 
-		
+	pressClearButton()
+	
 	print("-----------------------------")
+	print("Iterations : ", iterations)
+	print("Cycles : ", cycles)
 	print("Time spent :", floor((Time.get_ticks_msec() - start) / 100.0) / 10.0, "s")
 	print("Number of changes : ", changes)
 	print("-----------------------------")
@@ -262,6 +292,15 @@ func simulation():
 	player_1.show_card_costs()
 	print("Average turn for win ", max_average_turn_for_win)
 	print("Quickest win ", max_quickest_win)
+	
+	print("| STEP      | WR         | NBT      | COSTS")
+	for s in stats:
+		var card_costs = ""
+		for cost in s.card_costs.values():
+			card_costs = str(card_costs, " ", cost)
+		print("|      %4d |       %1.2f |   %2.4f | %s" % [s.step, s.win_ratio, s.average_turn_for_win, card_costs])
+		#print(s.step, " - WR ", s.win_ratio, " - avg nbt", s.average_turn_for_win)
+	
 	#print("Cards efficiency:")
 	#var ce_total = 0
 	#var ce = cards_efficiency.values()
@@ -360,6 +399,14 @@ func save_deck():
 	file = FileAccess.open(save_path + filename, FileAccess.WRITE)
 	file.store_line(data)
 	file.close()
+
+func print_decks(player):
+	print("Player 1")
+	player_1.save_deck()
+	
+	print("Player 2")
+	player_2.save_deck()
+	
 		
 func load_player_1_deck():
 	player_1.cards = load_deck(load_string)
@@ -372,6 +419,10 @@ func load_player_2_deck():
 	print("Loaded player_2 deck !")
 	player_2.show_deck()
 	player_2.show_card_costs()
+
+func load_starting_decks():
+	player_1.cards = player_1_starting_deck.duplicate()
+	player_2.cards = player_2_starting_deck.duplicate()
 
 func load_deck(deck_string) -> Array[CardResource]:
 	var res_cards : Array[CardResource]
@@ -415,3 +466,11 @@ func create_optimized_deck():
 	for i in deck_size:
 		player_1.cards.append(ce[i].card)
 	player_1.update_deck_cards()
+
+func print_player_1_deck():
+	print("--- PLAYER 1 ---")
+	print(player_1.save_deck())
+	
+func print_player_2_deck():
+	print("--- PLAYER 2 ---")
+	print(player_2.save_deck())

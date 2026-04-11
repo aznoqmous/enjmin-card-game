@@ -9,12 +9,12 @@ var hand : Array[Card]
 var discard_pile : Array[Card]
 var terrain : Array[Card]
 
-var starting_mana := 4
-var max_mana := 4
+var starting_mana := 3
+var max_mana := 3
 var current_mana := 0
 var mana_increment_per_turn := 1
-var max_hp := 30
-var current_hp := 30
+var max_hp := 20
+var current_hp := 20
 var card_draw := 7
 
 var card_controls : Dictionary[String, CardControl]
@@ -148,6 +148,18 @@ func show_card_costs():
 			cost_str = str(cost_str, "#")
 		print(k, " x ", cost_count[k], " ", cost_str)
 
+func get_card_costs():
+	var cost = 0
+	var cost_str = ""
+	var cost_count = {}
+	
+	for i in 8:
+		cost_count[i] = 0
+		
+	for c in cards:
+		cost_count[c.cost] += 1
+	return cost_count
+	
 func save_deck():
 	var save = []
 	for c in cards:
