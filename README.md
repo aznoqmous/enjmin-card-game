@@ -11,7 +11,7 @@ The objective of this experiment is to try out a variety of optimization techniq
   - [Step-by-step turn](#step-by-step-turn)
 - [Approaches](#approaches)
 - [Protocol](#protocol)
-- [Starting Deck](#starting-deck)
+  - [Starting Deck](#starting-deck)
 - [Basic Learning / Monte Carlo](#basic-learning--monte-carlo)
   - [Win rate evolution](#win-rate-evolution)
   - [Number of turns](#number-of-turns)
@@ -70,7 +70,7 @@ We will reuse the same decks to best compare our results across different techni
 
 For each improving iteration, we'll report the current iteration **count**, **win-rate**, **number of turn** (per win), and **mana curve**.
 
-# Starting Deck
+## Starting Deck
 Starting decks will be selected in a setting where our improved deck (player 1) is at a low win-rate value.  
 
 ![](screenshots/0-starting-deck.png)
