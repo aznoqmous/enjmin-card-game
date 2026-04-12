@@ -216,7 +216,7 @@ func simulation():
 	
 	var changes := 0
 	for i in iterations:
-		var win_ratio = await play_games(cycles)
+		var win_ratio = await play_games(cycles) / average_turn_for_win
 		await get_tree().create_timer(0).timeout
 		if max_average_turn_for_win > average_turn_for_win: max_average_turn_for_win = average_turn_for_win
 		if max_quickest_win > quickest_win: max_quickest_win = quickest_win
