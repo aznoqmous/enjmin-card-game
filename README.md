@@ -18,6 +18,9 @@ The objective of this experiment is to try out a variety of optimization techniq
   - [Mana curve](#mana-curve)
   - [Bonus: Impact of changing the rating score (WR/NBT rating)](#bonus-impact-of-changing-the-rating-score-wrnbt-rating)
 - [Rated Setlist](#rated-setlist)
+  - [Win rate evolution](#win-rate-evolution-1)
+  - [Number of turns](#number-of-turns-1)
+  - [Mana curve](#mana-curve-1)
 - [Reinforced training](#reinforced-training)
   - [Rapport](#rapport)
 
@@ -111,9 +114,26 @@ Regarding mana curve, we end up with 1-2 and 3 cost cards being added to the dec
 # Rated Setlist
 
 We now rate added/removed cards according to their impact in win ratio.
-Here is the result over 1000 iterations :
+Here is the result over 1000 iterations
 
 This system sometimes achieves 100% winrate in under 600 iterations, according to the opponent deck.
+
+![](screenshots/2-setlist-simulation.png)
+
+## Win rate evolution
+The win-rate improves faster then with the Monte Carlo method and reach a plateau around step 100.  
+
+![](screenshots/2-setlist-win-rate.png)
+
+## Number of turns
+The number of turns follows the same pattern, quickly ending around 5.8 turns on average.
+
+![](screenshots/2-setlist-nbt.png)
+
+## Mana curve
+Surprisingly, the deck ends up filled with 7 cost cards, at the cost ok 4-5-6 cards being removed from the deck.
+
+![](screenshots/2-setlist-mana-curve.png)
 
 # Reinforced training
 Opponent deck copy player deck when winrate is over 95%, for 2000 iterations.

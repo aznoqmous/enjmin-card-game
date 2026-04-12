@@ -20,7 +20,7 @@ Card cost repartition
 5 x 3 ###
 6 x 4 ####
 7 x 11 ###########
-Average turn for win 5.65853658536585
+Average turn for win 5.88633658536585
 Quickest win 3
 | STEP      | WR         | NBT      | COSTS
 |         0 |       0,36 |   8,2556 |  0 0 1 0 7 7 7 8
