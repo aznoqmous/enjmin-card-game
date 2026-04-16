@@ -36,6 +36,7 @@ var deck_size := 30
 @export_tool_button("LOAD STARTING DECKS") var load_starting = load_starting_decks
 @export_tool_button("PRINT PLAYER 1 DECK") var print_player_1 = print_player_1_deck
 @export_tool_button("PRINT PLAYER 2 DECK") var print_player_2 = print_player_2_deck
+@export_tool_button("PRINT CARDS EFFICIENCY") var print_cards_eff = print_cards_efficiency
 @export_multiline var load_string : String
 
 @export_category("VISUALIZER")
@@ -216,7 +217,7 @@ func simulation():
 	
 	var changes := 0
 	for i in iterations:
-		var win_ratio = await play_games(cycles) / average_turn_for_win
+		var win_ratio = await play_games(cycles)
 		await get_tree().create_timer(0).timeout
 		if max_average_turn_for_win > average_turn_for_win: max_average_turn_for_win = average_turn_for_win
 		if max_quickest_win > quickest_win: max_quickest_win = quickest_win
@@ -238,13 +239,16 @@ func simulation():
 				"step": i,
 				"win_ratio": win_ratio,
 				"average_turn_for_win": average_turn_for_win,
-				"card_costs": player_1.get_card_costs()
+				"card_costs": player_1.get_card_costs(),
+				"efficiency": cards_efficiency.values().filter(func(a): return a.value != 0).size()
 			})
 			if best_win_ratio: changes += 1
 			last_deck = player_1.cards.duplicate()
 			best_win_ratio = win_ratio
 			print("Best win ratio : ", best_win_ratio, " - ", i)
 			if added_card:
+				#var added_value = cards_efficiency[added_card.get_id()].value
+				#var removed_value = cards_efficiency[removed_card.get_id()].value
 				cards_efficiency[added_card.get_id()].value += best_win_ratio - win_ratio
 				cards_efficiency[removed_card.get_id()].value -= best_win_ratio - win_ratio
 		
@@ -256,7 +260,8 @@ func simulation():
 				clear_cards_efficiency()
 		else:
 			if has_efficiency:
-				removed_card = remove_worst_card(player_1)
+				#removed_card = remove_worst_card(player_1)
+				removed_card = player_1.cards.pick_random()
 				player_1.cards.erase(removed_card)
 				added_card = add_random_best_card(player_1)
 				player_1.cards.append(added_card)
@@ -272,7 +277,8 @@ func simulation():
 			var pstr = "["
 			for p in 100.0:
 				pstr = str(pstr, "#" if p / 100.0 < i / float(iterations) else " ")
-			pstr = str(pstr, "] - ", win_ratio, " - ", best_win_ratio, " - ", max_average_turn_for_win, " - ", max_quickest_win)
+			var ce_count = cards_efficiency.values().filter(func(a): return a.value != 0).size()
+			pstr = str(pstr, "] - ", win_ratio, " - ", best_win_ratio, " - ", max_average_turn_for_win, " - ", max_quickest_win, " - ", ce_count, "/", cards.size())
 			print(pstr)
 		if win_ratio == 1: break;
 		
@@ -410,12 +416,14 @@ func print_decks(player):
 		
 func load_player_1_deck():
 	player_1.cards = load_deck(load_string)
+	player_1_starting_deck = player_1.cards.duplicate()
 	print("Loaded player_1 deck !")
 	player_1.show_deck()
 	player_1.show_card_costs()
 	
 func load_player_2_deck():
 	player_2.cards = load_deck(load_string)
+	player_2_starting_deck = player_2.cards.duplicate()
 	print("Loaded player_2 deck !")
 	player_2.show_deck()
 	player_2.show_card_costs()
@@ -474,3 +482,14 @@ func print_player_1_deck():
 func print_player_2_deck():
 	print("--- PLAYER 2 ---")
 	print(player_2.save_deck())
+
+func print_cards_efficiency():
+	print("Cards efficiency:")
+	var ce_total = 0
+	var ce = cards_efficiency.values()
+	ce.sort_custom(func(a, b): return a.value > b.value)
+	for c in ce:
+		if c.value == 0.0: continue
+		ce_total += 1
+		print(c.card.get_id(), " ", c.value)
+	print(ce_total, "/", cards.size(), " cards tested")
