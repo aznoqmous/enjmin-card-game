@@ -25,7 +25,7 @@ The objective of this experiment is to try out a variety of optimization techniq
 - [Conclusion / Critical analysis](#conclusion--critical-analysis)
   - [Card repartition](#card-repartition)
   - [Card efficiency](#card-efficiency)
-- [Bonus : Turnament final fight](#bonus--turnament-final-fight)
+- [Bonus : Tournament final fight](#bonus--tournament-final-fight)
 
 # Game Rules / Settings
 ## Player
@@ -322,8 +322,8 @@ An interesting trend showed by rating cards efficiency is a relation between **A
 ![](screenshots/3-efficiency.png)
 
 
-# Bonus : Turnament final fight
-Here is a screen of the last fight in the turnament.  
+# Bonus : Tournament final fight
+Here is a screen of the last fight in the tournament.  
 Deck was using the **Setlist** approach and trained against itself multiple times, `5 x 1000 iterations x 500 cycles`.
 
 ![](screenshots/turnament-optimal-vs-trained-5000.png)
